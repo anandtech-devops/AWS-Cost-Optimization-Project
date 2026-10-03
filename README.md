@@ -1,80 +1,81 @@
 # AWS Cost Optimization Project
 
-A practical AWS cost optimization and resource analysis project built using **Terraform, Python, Boto3, Amazon CloudWatch, Amazon EC2, Amazon EBS, and AWS Cost Explorer**.
+A practical AWS cost optimization and resource analysis project built using **Terraform, Python, Boto3, Amazon EC2, Amazon CloudWatch, Amazon EBS, and AWS Cost Explorer**.
 
-The project identifies potential AWS cost optimization opportunities by analyzing EC2 utilization, EBS volumes, and AWS billing data.
+The project analyzes AWS infrastructure and billing information to identify **potential cost optimization opportunities** without automatically modifying or deleting production resources.
 
 ---
 
 ## Project Objective
 
-The main objective of this project is to build a simple automation tool that can:
+The goal of this project is to build a simple automation workflow that can:
 
 * Provision AWS infrastructure using Terraform
-* Monitor EC2 CPU utilization using CloudWatch
-* Analyze EBS volumes and identify potentially unused volumes
-* Retrieve AWS billing information using Cost Explorer
+* Retrieve EC2 resource information using Boto3
+* Analyze EC2 CPU utilization using CloudWatch
+* Identify potentially unused EBS volumes
+* Retrieve AWS billing data using Cost Explorer
 * Generate a consolidated cost optimization report
-* Automatically execute the report using Windows Task Scheduler
+* Run the analysis automatically using Windows Task Scheduler
 
 ---
 
-## Architecture
+## Project Flow
 
 ```text
-                    Terraform
-                       |
-                       v
-                  AWS EC2 Instance
-                       |
-             +---------+---------+
-             |                   |
-             v                   v
-        CloudWatch              EBS
-        CPU Metrics          Volume Analysis
-             |                   |
-             +---------+---------+
-                       |
-                       v
-                  Python / Boto3
-                       |
-             +---------+---------+
-             |                   |
-             v                   v
-       EC2 API              Cost Explorer
-             |                   |
-             +---------+---------+
-                       |
-                       v
-             Cost Optimization Report
-                       |
-                       v
-              Windows Task Scheduler
-                Automatic Execution
+Terraform
+    |
+    v
+AWS EC2
+    |
+    +------------------+
+    |                  |
+    v                  v
+CloudWatch           EBS
+CPU Metrics      Volume Analysis
+    |                  |
+    +--------+---------+
+             |
+             v
+        Python / Boto3
+             |
+      +------+------+
+      |             |
+      v             v
+   EC2 API    Cost Explorer
+      |             |
+      +------+------+
+             |
+             v
+   Cost Optimization Report
+             |
+             v
+   Windows Task Scheduler
 ```
 
 ---
 
 ## Technologies Used
 
-* **AWS**
-* **Terraform**
-* **Python**
-* **Boto3**
-* **Amazon EC2**
-* **Amazon CloudWatch**
-* **Amazon EBS**
-* **AWS Cost Explorer**
-* **AWS CLI**
-* **Windows Task Scheduler**
-* **Git & GitHub**
+| Technology                 | Purpose                                  |
+| -------------------------- | ---------------------------------------- |
+| **Terraform**              | AWS infrastructure provisioning          |
+| **AWS EC2**                | Compute resource used for the lab        |
+| **Amazon CloudWatch**      | EC2 CPU metric analysis                  |
+| **Amazon EBS**             | Storage resource analysis                |
+| **AWS Cost Explorer**      | AWS billing information                  |
+| **Python**                 | Automation and report generation         |
+| **Boto3**                  | AWS API integration                      |
+| **AWS CLI**                | AWS resource verification and management |
+| **Windows Task Scheduler** | Scheduled report execution               |
+| **Git & GitHub**           | Source control and project documentation |
 
 ---
 
 ## Project Structure
 
 ```text
-aws-cost-optimization-project/
+AWS-Cost-Optimization-Project/
 │
 ├── provider.tf
 ├── main.tf
@@ -85,14 +86,17 @@ aws-cost-optimization-project/
 ├── ebs_analyzer.py
 │
 ├── README.md
-└── .gitignore
+├── .gitignore
+└── .terraform.lock.hcl
 ```
+
+> Terraform state files and the `.terraform/` directory are intentionally excluded from the repository.
 
 ---
 
-## 1. Infrastructure Provisioning
+# 1. Infrastructure Provisioning with Terraform
 
-Terraform is used to provision the EC2 instance.
+Terraform is used to provision the EC2 lab instance.
 
 Example:
 
@@ -107,7 +111,7 @@ resource "aws_instance" "cost_lab" {
 }
 ```
 
-The Terraform provider is configured for the AWS Mumbai region:
+AWS provider configuration:
 
 ```hcl
 provider "aws" {
@@ -115,68 +119,75 @@ provider "aws" {
 }
 ```
 
+The project uses the AWS Mumbai region for the lab infrastructure.
+
 ---
 
-## 2. EC2 Cost Analysis
+# 2. EC2 Resource Analysis
 
-The Python script uses Boto3 to retrieve EC2 information such as:
+Python and Boto3 are used to retrieve EC2 information such as:
 
 * Instance ID
 * Instance type
-* Current state
+* Current instance state
 
-CloudWatch CPU metrics are also retrieved for the EC2 instance.
+The script then combines this information with CloudWatch CPU metrics.
 
-The project currently uses a CPU threshold of:
+The current CPU analysis threshold is:
 
 ```text
 10%
 ```
 
-If recent CPU utilization is below this threshold, the tool reports:
+If the analyzed CPU utilization is below this threshold, the application reports:
 
 ```text
 EC2 appears potentially underutilized.
 ```
 
-The tool does **not automatically stop or terminate the instance**.
+The project **does not automatically stop, terminate, or resize the EC2 instance**.
 
-It only provides a finding for further review.
-
----
-
-## 3. CloudWatch CPU Analysis
-
-The project retrieves EC2 `CPUUtilization` metrics from Amazon CloudWatch.
-
-Current analysis window:
-
-```text
-Last 1 hour
-```
-
-Metrics are collected in:
-
-```text
-5-minute periods
-```
-
-Example result:
-
-```text
-Average CPU   : 0.15 %
-Data Points   : 12
-```
-
-Because this is a learning project with a short monitoring history, the result is treated as a **potential underutilization finding**, not as a production scaling decision.
+The result is treated as a finding that requires further review.
 
 ---
 
-## 4. EBS Analysis
+# 3. CloudWatch CPU Analysis
 
-The Python application uses the EC2 API to inspect EBS volumes.
+The project retrieves the EC2:
 
-It checks:
+```text
+AWS/EC2
+CPUUtilization
+```
+
+metric from Amazon CloudWatch.
+
+Current analysis configuration:
+
+```text
+Analysis window : Last 1 hour
+Metric period   : 5 minutes
+Statistic       : Average
+```
+
+Example lab result:
+
+```text
+Average CPU : 0.15%
+Data Points : 12
+```
+
+Because this is a learning project with a short monitoring history, this result is treated only as a **potential underutilization finding**.
+
+For a real production environment, longer historical data would be required before making right-sizing or scheduling decisions.
+
+---
+
+# 4. EBS Analysis
+
+The project uses the EC2 API to inspect EBS volumes.
+
+The analyzer checks:
 
 ```text
 Volume size
@@ -190,32 +201,25 @@ A volume with:
 State = available
 ```
 
-is treated as a potentially unused EBS volume because it is not attached to an EC2 instance.
+is identified as a **potentially unused EBS volume**, because it is not currently attached to an EC2 instance.
 
-Example test:
+A test EBS volume was created during development to validate this detection logic.
 
-```text
-Volume ID : vol-0541f96ed475d2dd4
-Size      : 1 GB
-Type      : gp3
-State     : available
-```
-
-The analyzer successfully detected this test volume as:
+The analyzer successfully detected the test volume as:
 
 ```text
 1 potentially unused EBS volume(s) detected.
 ```
 
-The project does not automatically delete EBS volumes.
+The project **does not automatically delete EBS volumes**.
 
 ---
 
-## 5. AWS Cost Explorer
+# 5. AWS Cost Explorer
 
-AWS Cost Explorer is used to retrieve actual AWS billing data through the AWS API.
+AWS Cost Explorer is used to retrieve billing information through the AWS API.
 
-The Python application uses:
+The Python application uses the Cost Explorer service endpoint:
 
 ```python
 cost_explorer = boto3.client(
@@ -224,19 +228,25 @@ cost_explorer = boto3.client(
 )
 ```
 
-The EC2 and CloudWatch resources are located in:
+The infrastructure itself is deployed in:
 
 ```text
 ap-south-1
 ```
 
-The Cost Explorer API is called using its supported endpoint.
+The Cost Explorer API is accessed through its supported service endpoint while the resources being analyzed remain in the Mumbai region.
 
-The project retrieves `UnblendedCost` for the selected billing period.
+The project retrieves:
+
+```text
+UnblendedCost
+```
+
+for the selected billing period.
 
 ---
 
-## 6. Consolidated Cost Report
+# 6. Consolidated Cost Optimization Report
 
 The main script:
 
@@ -244,21 +254,22 @@ The main script:
 cost_report.py
 ```
 
-combines:
+combines information from multiple AWS services.
 
 ```text
-EC2 information
-+
-CloudWatch CPU metrics
-+
-EBS analysis
-+
-Cost Explorer billing data
+EC2 Information
+       +
+CloudWatch CPU Metrics
+       +
+EBS Analysis
+       +
+Cost Explorer Billing
+       |
+       v
+Consolidated Cost Optimization Report
 ```
 
-and generates a single report.
-
-Example:
+Example report structure:
 
 ```text
 =======================================================
@@ -268,7 +279,7 @@ Example:
 RESOURCE INFORMATION
 -------------------------------------------------------
 Region        : ap-south-1
-Instance ID   : i-07cdc1f01f242a366
+Instance ID   : <EC2 instance ID>
 Instance Type : t3.micro
 Current State : running
 
@@ -281,26 +292,29 @@ Action        : Review usage before downsizing or stopping.
 
 EBS ANALYSIS
 -------------------------------------------------------
-Total Storage : 48 GB
-Unused Volumes: 0
-Finding       : No unused EBS volumes detected.
+Total Storage : <current storage>
+Unused Volumes: <current count>
+Finding       : Potential unused volume(s) detected.
 
 AWS BILLING
 -------------------------------------------------------
-AWS Cost      : Cost Explorer value
+Billing Period: <selected period>
+AWS Cost      : <Cost Explorer value>
 
 OPTIMIZATION SUMMARY
 -------------------------------------------------------
-[1] CPU: Potential underutilization identified.
-[2] EBS: No unused EBS volumes identified.
-[3] Billing: Cost Explorer data successfully retrieved.
+[1] CPU: Potential utilization finding
+[2] EBS: Potential unused volume finding
+[3] Billing: Cost Explorer data retrieved
 ```
+
+The report is designed to provide **evidence for review rather than automatically performing destructive actions**.
 
 ---
 
-## 7. Automation
+# 7. Automation
 
-Windows Task Scheduler is used to automatically execute:
+Windows Task Scheduler is used to execute:
 
 ```text
 cost_report.py
@@ -329,30 +343,41 @@ cost_report.py
 Cost Optimization Report
 ```
 
-The scheduled task was successfully tested with:
+The scheduled task was successfully tested.
+
+Verification returned:
 
 ```text
 LastTaskResult : 0
 ```
 
+which indicates that the scheduled task completed successfully.
+
 ---
 
-## 8. Safety Approach
+# 8. Safety Approach
 
-This project follows a **detect first, action later** approach.
+The project follows a:
+
+```text
+Detect → Analyze → Report → Review
+```
+
+approach.
 
 The application:
 
 * Does not automatically terminate EC2 instances
 * Does not automatically delete EBS volumes
+* Does not automatically resize resources
 * Does not claim guaranteed cost savings
-* Reports potential optimization opportunities for review
+* Reports potential optimization opportunities for human review
 
-This prevents accidental deletion or interruption of AWS resources.
+This approach reduces the risk of accidentally modifying AWS resources during analysis.
 
 ---
 
-## 9. Key Learning Outcomes
+# 9. Key Learning Outcomes
 
 Through this project, I practiced:
 
@@ -364,30 +389,35 @@ Through this project, I practiced:
 * Python automation
 * Boto3 AWS SDK
 * AWS CLI
-* Cost optimization concepts
+* AWS cost optimization concepts
 * Scheduled automation
 * Git and GitHub workflow
+* Basic AWS API integration
 
 ---
 
-## 10. Future Improvements
+# 10. Future Improvements
 
 Possible future improvements include:
 
 * Longer-term CPU utilization analysis
-* Daily/weekly automated reports
+* Daily and weekly automated reports
 * Cost reports grouped by AWS service
 * SNS/email notifications
 * GitHub Actions automation
-* More detailed CloudWatch analysis
-* Automated tagging checks
-* Right-sizing recommendations
+* Additional CloudWatch metrics
+* Automated resource tagging checks
+* Right-sizing analysis
 * Dashboard visualization
 
 ---
 
 ## Disclaimer
 
-This is a learning and portfolio project.
+This is a **learning and portfolio project**.
 
-The optimization findings are recommendations for review and are not automatic production decisions. AWS pricing and billing can vary based on region, operating system, usage, pricing model, credits, and other AWS billing factors.
+The optimization findings are recommendations for review and are not automatic production decisions.
+
+AWS billing can vary depending on factors such as region, usage, operating system, pricing model, credits, refunds, and billing adjustments.
+
+The project should therefore be treated as a demonstration of **AWS monitoring, API-based analysis, Terraform provisioning, Python automation, and cost optimization concepts** rather than as a complete production FinOps platform.
